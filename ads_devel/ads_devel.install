@@ -9,9 +9,21 @@
  * Implements hook_enable().
  */
 function ads_enable(&$form, &$form_state, $form_id) {
-  // Enable debugs
-  variable_set('rules_debug', 2);
-  variable_set('rules_debug_log', 1);
+  /* TODO: Currently we don't have any variable which indicates environment.
+  global $conf;
+  $env = $conf["environment"];
+
+  if ($env == 'live') {
+    return; // Ignore the live environment.
+  }
+  */
+
+
+  // Enable contrib debugs
+  variable_set('rules_debug',        1); // or: 2
+  variable_set('rules_debug_log',    1);
+  variable_set('securepages_debug',  1);
+
 
   // Enable views debugs
   variable_set('views_ui_show_listing_filters', TRUE);
@@ -26,6 +38,26 @@ function ads_enable(&$form, &$form_state, $form_id) {
   variable_set('views_devel_output', TRUE);
   variable_set('views_devel_region', 'message');
   variable_set('views_ui_display_embed', TRUE);
+  // variable_set('views_skip_cache', TRUE); // Very slow.
+
+  // Enable useful development variables.
+  variable_set('site_mail', 'admin@example.com'); // Set dummy e-mail for the site
+  variable_set('user_failed_login_user_limit', 100); // user module
+  variable_set('sagepage_use_test_data', 1); // Sagepay:  Override entered card data with test data.
+  variable_set('sagepay_debug_mode', 1); // Sagepay: Enable Debug mode.
+  variable_set('jquery_update_compression_type', 'none'); // jQuery compression type: none | min | pack
+
+  // Disable certain components.
+  module_exists('overlay') ? user_save(user_load(1), array('data' => array('overlay_message_dismissed' => TRUE))) : NULL; // Disable overlay for admin.
+  variable_set('securepages_enable', 0); // Disable SSL on dev env.
+
+
+  // Enable development modules.
+  //  - advanced_help - Provides more and better help e.g. for Views.
+  module_enable(array('advanced_help'));
+
+  // TODO
+  // Ideally enable views_ui, workflow_admin_ui, admin_menu_toolbar if exists in the projects.
 }
 
 /**
@@ -33,11 +65,12 @@ function ads_enable(&$form, &$form_state, $form_id) {
  */
 function ads_disable(&$paths) {
 
-  // Disable debugs
-  variable_set('rules_debug', 0);
-  variable_set('rules_debug_log', 0);
+  // Disable contrib debugs
+  variable_set('rules_debug',        0);
+  variable_set('rules_debug_log',    0);
+  variable_set('securepages_debug',  0);
 
-  // Enable views debugs
+  // Disable views debugs
   variable_set('views_ui_show_listing_filters', FALSE);
   variable_set('views_ui_show_master_display', FALSE);
   variable_set('views_ui_show_advanced_column', FALSE);
@@ -47,5 +80,36 @@ function ads_disable(&$paths) {
   variable_set('views_devel_output', FALSE);
   variable_set('views_devel_region', 'message');
   variable_set('views_ui_display_embed', FALSE);
+  variable_set('views_skip_cache', FALSE);
+
+  // Revert previous development variables.
+  // TODO: We need to store somehow the previous values, so we can back to the same as it was.
+
+  // Disable development modules.
+  module_disable(array('advanced_help'));
 }
 
+
+/**
+ * Implements requirements().
+ */
+/*
+// TODO: Currently we don't have any variable which indicates environment.
+function ads_devel_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break at install time
+  $t = get_t();
+
+  if ($phase == 'install') {
+    global $conf;
+    if ($conf["environment"] == 'live') {
+      $requirements['ads_devel'] = array(
+        'title' => $t('ADS Devel'),
+        'value' => $t('This module should not be enabled on Production, sorry!'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}
+*/
