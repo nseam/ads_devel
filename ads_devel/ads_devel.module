@@ -46,7 +46,7 @@ function ads_devel_watchdog($log_entry) {
 /**
  * Implements hook_cron().
  */
-function ads_devel_cron($log_entry) {
+function ads_devel_cron() {
   // Remove debug file if it's too big.
   $debug_file = file_directory_temp() . '/drupal_debug.txt';
   file_exists($debug_file) &&
